@@ -12,8 +12,13 @@ namespace LyokhaVR
         {
             if (Simulator == null) return;
 #if UNITY_EDITOR
-            // Do not overwrite a real headset if the project is later opened on a VR workstation.
-            Simulator.SetActive(!XRSettings.isDeviceActive);
+            // A native session may not yet be active during Awake (for example, before
+            // the headset is worn). Use the configured Editor launch mode as well,
+            // otherwise simulated devices can replace the real headset's input.
+            var nativeSettings = UnityEditor.XR.Management.XRGeneralSettingsPerBuildTarget
+                .XRGeneralSettingsForBuildTarget(UnityEditor.BuildTargetGroup.Standalone);
+            bool nativeStartup = nativeSettings != null && nativeSettings.InitManagerOnStart;
+            Simulator.SetActive(!nativeStartup && !XRSettings.isDeviceActive);
 #else
             Simulator.SetActive(false);
 #endif
